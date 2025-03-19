@@ -9,16 +9,21 @@
 /*WiFi credentials */
 const char* wifiName = "OnePlus9Pro";
 const char* wifiPassword = "passwordiot";
-const char* mqtt_server = "broker.hivemq.com";
+const char* mqtt_server = "192.168.177.156";
 const int mqttPort = 1883;
 const char* temperatureTopic = "assignment03-temperature";
 const char* frequencyTopic = "assignment03-frequency";
-float frequency = 1.0;
+float frequency = 0.001;
 WiFiClient espClient;
 PubSubClient client(espClient);
 
 enum {CONNECTED, DOWN} networkState; 
-
+/*
+mosquitto_pub -h 192.168.177.156 -t "assignment03-frequency" -m "0.00005"
+mosquitto_sub -h 192.168.177.156 -t "assignment03-temperature" -v
+netstat -an | grep 1883
+mosquitto -v
+*/
 Light* redLed;
 Light* greenLed;
 TemperatureDevice* temp;
@@ -35,8 +40,11 @@ void setup_wifi(){
   Serial.println("IP address: ");
   Serial.println(WiFi.localIP());
 }
+
 void callback(char* topic, byte* payload, unsigned int length) {
-  if(strcmp(topic, temperatureTopic)){
+  Serial.println(String("Message arrived on [") + topic + "] len: " + length );
+
+  if(strcmp(topic, temperatureTopic) == 0){
 
   } else if(strcmp(topic, frequencyTopic) == 0){
     String message = "";
@@ -60,7 +68,6 @@ void reconnect() {
     // Attempt to connect
     if (client.connect(clientId.c_str())) {
       Serial.println("connected");
-      client.subscribe(temperatureTopic);
       client.subscribe(frequencyTopic);
     } else {
       Serial.print("failed, rc=");
@@ -85,8 +92,8 @@ void setup() {
 }
 
 void loop() {
-  Serial.println(temp->getTemperature());
-  delay(2000);
+  client.loop();
+  Serial.println("Frequenza: " +  String(frequency, 6));
   switch (networkState)
   {
     case DOWN:
@@ -94,10 +101,10 @@ void loop() {
       Serial.println("Down");
       setup_wifi();
       if(WiFi.status() == WL_CONNECTED){
+        reconnect();
         redLed->switchOff();
         greenLed->switchOn();
         networkState = CONNECTED;
-        reconnect();
       }
       
       break;
@@ -105,10 +112,21 @@ void loop() {
 
     case CONNECTED:
     {
+
       if(WiFi.status() != WL_CONNECTED || !client.connected()){
         greenLed->switchOff();
         redLed->switchOn();
         networkState = DOWN;
+      } else {
+        float temperature = temp->getTemperature();
+        String msg = String(temperature);
+        Serial.println(msg);
+        client.publish(temperatureTopic, msg.c_str());
+        float timeStop = millis() +  (1 / frequency);
+        while(millis() <= timeStop && WiFi.status() == WL_CONNECTED && client.connected()) {
+          client.loop();
+        }
+        
       }
       break;
     }
