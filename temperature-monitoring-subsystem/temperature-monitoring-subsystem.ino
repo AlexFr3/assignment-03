@@ -9,7 +9,7 @@
 /*WiFi credentials */
 const char* wifiName = "OnePlus9Pro";
 const char* wifiPassword = "passwordiot";
-const char* mqtt_server = "192.168.177.156";
+const char* mqtt_server = "192.168.34.156";
 const int mqttPort = 1883;
 const char* temperatureTopic = "assignment03-temperature";
 const char* frequencyTopic = "assignment03-frequency";
@@ -19,8 +19,8 @@ PubSubClient client(espClient);
 
 enum {CONNECTED, DOWN} networkState; 
 /*
-mosquitto_pub -h 192.168.177.156 -t "assignment03-frequency" -m "0.00005"
-mosquitto_sub -h 192.168.177.156 -t "assignment03-temperature" -v
+mosquitto_pub -h 192.168.34.156 -t "assignment03-frequency" -m "0.00005"
+mosquitto_sub -h 192.168.34.156 -t "assignment03-temperature" -v
 netstat -an | grep 1883
 mosquitto -v
 */
