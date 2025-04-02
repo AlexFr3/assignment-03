@@ -2,7 +2,7 @@
 #define __SERVO_MOTOR_IMPL__
 
 #include "servo_motor.h"
-#include "ServoTimer2.h"
+#include "Servo.h"
 
 class ServoMotorImpl: public ServoMotor {
 
@@ -15,7 +15,7 @@ public:
     
 private:
   int pin; 
-  ServoTimer2 motor; 
+  Servo motor; 
 };
 
 #endif

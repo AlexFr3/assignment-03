@@ -9,7 +9,7 @@
 /*WiFi credentials */
 const char* wifiName = "OnePlus9Pro";
 const char* wifiPassword = "passwordiot";
-const char* mqtt_server = "192.168.34.156";
+const char* mqtt_server = "broker.hivemq.com";
 const int mqttPort = 1883;
 const char* temperatureTopic = "assignment03-temperature";
 const char* frequencyTopic = "assignment03-frequency";
