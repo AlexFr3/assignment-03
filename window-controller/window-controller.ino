@@ -22,15 +22,16 @@ void setup() {
 }
 
 void loop() {
-  while (MsgService.isMsgAvailable()){
+  if(MsgService.isMsgAvailable()){
     Msg *msg = MsgService.receiveMsg();
-    int startPos = msg->getContent().indexOf(':');
+    int startPos = (msg->getContent().indexOf(':'))+1;
     if (msg->getContent().startsWith("Temperature:"))
     {
       temperature = msg->getContent().substring(startPos).toFloat();
     }else if(msg->getContent().startsWith("Opening:"))
     {
       openingPercentage = msg->getContent().substring(startPos).toFloat();
+
     }
     delete msg;
   }
@@ -42,13 +43,11 @@ void loop() {
       MsgService.sendMsg("Opening: "+ String(opening));
       moveWindow(opening);
 
-      Serial.println("Automatic");
       clearOutput();
       writeMessage("Automatic");
       setNextLine();
       writeMessage("Opening angle: "+ String(opening));
       
-      delay(2000);
       if(btn->isPressed())
       {
         modeState = MANUAL;
@@ -62,12 +61,11 @@ void loop() {
       writeMessage("MANUAL  T:"+ String(temperature));
       setNextLine();
       long valueRead = analogRead(POT_PIN);
-      long openingValue = (valueRead * 90) / 1023;
-      MsgService.sendMsg("Opening:"+ openingValue);
+      long openingValue = (valueRead * 90) / 1023.0;
+      MsgService.sendMsg("Opening:"+ String(openingValue));
 
       writeMessage("Opening angle: "+ String(openingValue));
       moveWindow(openingValue);
-      delay(2000);
       if(btn->isPressed())
       {
         modeState = AUTOMATIC;
@@ -75,6 +73,7 @@ void loop() {
       break;
     }
   }
+  delay(500);
 }
 
 void moveWindow(int angle)

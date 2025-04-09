@@ -9,7 +9,7 @@ F1 = 0.001
 F2 = 0.002
 DT = 10
 N = 10
-broker = "broker.hivemq.com"
+broker = "test.mosquitto.org"
 temperatureTopic = "assignment03-temperature"
 frequencyTopic = "assignment03-frequency"
 port = 1883
@@ -17,7 +17,7 @@ lastNtemperatures = deque(maxlen=N)
 cryticalEnter = time.time()
 alarmState = False
 
-arduino = serial.Serial('/dev/cu.usbmodem11301', 9600, timeout=1)
+arduino = serial.Serial('/dev/cu.usbmodem1301', 9600, timeout=1)
 time.sleep(2) 
 
 STATS = {
@@ -54,6 +54,7 @@ def message_received(client, userData, msg):
     message = read_msg()
     if message!=None:
         print("Messaggio ricevuto: " + str(message))
+        time.sleep(0.2)
     send_msg("Temperature:" + str(temperature))    
     #Normal state
     if temperature < T1:
@@ -76,7 +77,7 @@ def message_received(client, userData, msg):
             #TODO bloccare fino ad intervento operatore su dashboard
     client.publish(frequencyTopic, str(frequency))
     print(STATS)  
-    send_msg("Opening:" + opening)
+    send_msg("Opening:" + str(opening))
     
 client = mqtt.Client()
 client.on_message = message_received

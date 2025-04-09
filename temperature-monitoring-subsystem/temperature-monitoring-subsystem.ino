@@ -9,7 +9,7 @@
 /*WiFi credentials */
 const char* wifiName = "OnePlus9Pro";
 const char* wifiPassword = "passwordiot";
-const char* mqtt_server = "broker.hivemq.com";
+const char* mqtt_server = "test.mosquitto.org";
 const int mqttPort = 1883;
 const char* temperatureTopic = "assignment03-temperature";
 const char* frequencyTopic = "assignment03-frequency";
@@ -18,12 +18,7 @@ WiFiClient espClient;
 PubSubClient client(espClient);
 
 enum {CONNECTED, DOWN} networkState; 
-/*
-mosquitto_pub -h 192.168.34.156 -t "assignment03-frequency" -m "0.00005"
-mosquitto_sub -h 192.168.34.156 -t "assignment03-temperature" -v
-netstat -an | grep 1883
-mosquitto -v
-*/
+
 Light* redLed;
 Light* greenLed;
 TemperatureDevice* temp;
@@ -62,6 +57,7 @@ void reconnect() {
   while (!client.connected()) {
     Serial.print("Attempting MQTT connection...");
     
+
     // Create a random client ID
     String clientId = String("assignment03-client-")+String(random(0xffff), HEX);
 
@@ -69,6 +65,8 @@ void reconnect() {
     if (client.connect(clientId.c_str())) {
       Serial.println("connected");
       client.subscribe(frequencyTopic);
+      Serial.print("client state: ");
+      Serial.println(client.state());
     } else {
       Serial.print("failed, rc=");
       Serial.print(client.state());
