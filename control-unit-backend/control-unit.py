@@ -5,8 +5,8 @@ import serial
 
 T1 = 15
 T2 = 25
-F1 = 0.001
-F2 = 0.002
+F1 = 0.0001
+F2 = 0.0002
 DT = 10
 N = 10
 broker = "test.mosquitto.org"
@@ -19,6 +19,8 @@ alarmState = False
 
 arduino = serial.Serial('/dev/cu.usbmodem1301', 9600, timeout=1)
 time.sleep(2) 
+arduino.reset_input_buffer()
+arduino.reset_output_buffer()
 
 STATS = {
     "sum": 0,
@@ -28,7 +30,8 @@ STATS = {
 }
 
 def send_msg(message):
-    arduino.write(f"{message}\n".encode())  
+    arduino.write(f"{message}\n".encode())
+    print(f"Messaggio inviato: {message}")
 def read_msg():
     try:
         if arduino.in_waiting > 0:  
@@ -39,6 +42,7 @@ def read_msg():
     return None
 
 def message_received(client, userData, msg):
+    global cryticalEnter
     payload = msg.payload.decode()
     print("Temperatura ricevuta: " + str(payload))
     temperature = float(payload)
@@ -52,10 +56,11 @@ def message_received(client, userData, msg):
     STATS["count"] += 1
     
     message = read_msg()
-    if message!=None:
+    while message != None:
         print("Messaggio ricevuto: " + str(message))
-        time.sleep(0.2)
-    send_msg("Temperature:" + str(temperature))    
+        message = read_msg()
+    send_msg("Temperature:" + str(temperature))
+    time.sleep(0.2)
     #Normal state
     if temperature < T1:
         cryticalEnter = time.time()
@@ -64,6 +69,7 @@ def message_received(client, userData, msg):
         #TODO: inviare la segnale per aperture di arduino
     #Hot state
     elif temperature <= T2:
+        print("Sono a > 15")
         cryticalEnter = time.time()
         frequency = F2
         opening = 0.01 + 0.99 * ((temperature - T1) / (T2 - T1))

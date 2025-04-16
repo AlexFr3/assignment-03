@@ -13,7 +13,7 @@ const char* mqtt_server = "test.mosquitto.org";
 const int mqttPort = 1883;
 const char* temperatureTopic = "assignment03-temperature";
 const char* frequencyTopic = "assignment03-frequency";
-float frequency = 0.001;
+float frequency = 0.0001;
 WiFiClient espClient;
 PubSubClient client(espClient);
 
