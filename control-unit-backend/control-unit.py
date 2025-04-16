@@ -16,7 +16,6 @@ port = 1883
 lastNtemperatures = deque(maxlen=N)
 cryticalEnter = time.time()
 alarmState = False
-
 arduino = serial.Serial('/dev/cu.usbmodem1301', 9600, timeout=1)
 time.sleep(2) 
 arduino.reset_input_buffer()
@@ -59,8 +58,8 @@ def message_received(client, userData, msg):
     while message != None:
         print("Messaggio ricevuto: " + str(message))
         message = read_msg()
-    send_msg("Temperature:" + str(temperature))
-    time.sleep(0.2)
+    send_msg("T:" + str(temperature))
+    time.sleep(1)
     #Normal state
     if temperature < T1:
         cryticalEnter = time.time()
@@ -83,7 +82,7 @@ def message_received(client, userData, msg):
             #TODO bloccare fino ad intervento operatore su dashboard
     client.publish(frequencyTopic, str(frequency))
     print(STATS)  
-    send_msg("Opening:" + str(opening))
+    send_msg("O:" + str(opening))
     
 client = mqtt.Client()
 client.on_message = message_received

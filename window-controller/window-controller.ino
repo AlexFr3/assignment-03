@@ -15,6 +15,7 @@ states modeState = AUTOMATIC;
 int lastOpening = -1;
 states lastMode = AUTOMATIC;
 float lastTemperature = 0;
+
 void setup() {
   outputInit();
   pinMode(POT_PIN,INPUT);
@@ -26,18 +27,21 @@ void setup() {
 }
 
 void loop() {
-  while(MsgService.isMsgAvailable()){
+    while(MsgService.isMsgAvailable()){
     Msg *msg = MsgService.receiveMsg();
     int startPos = (msg->getContent().indexOf(':'))+1;
-    if (msg->getContent().startsWith("Temperature:"))
+    if (msg->getContent().startsWith("T:"))
     {
       temperature = msg->getContent().substring(startPos).toFloat();
     }else
     {
-      openingPercentage = msg->getContent().substring(startPos).toFloat();
+      if(msg->getContent().substring(startPos).toFloat() <= 1 && msg->getContent().substring(startPos).toFloat() >= 0)
+      {
+        openingPercentage = msg->getContent().substring(startPos).toFloat();
+      }
     }
-    MsgService.sendMsg("Opening:"+ String(openingValue));
     delete msg;
+    delay(500);
   }
   switch (modeState)
   {
@@ -87,6 +91,7 @@ void loop() {
   lastTemperature = temperature;
   lastOpening = openingValue;
   lastMode= modeState;
+  //MsgService.sendMsg("Opening:"+ String(openingValue) + "\n");
   delay(1000);
 }
 
