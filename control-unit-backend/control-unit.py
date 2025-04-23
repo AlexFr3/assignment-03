@@ -2,7 +2,8 @@ import paho.mqtt.client as mqtt
 import time
 from collections import deque
 import serial
-
+from flask import Flask, request, jsonify
+import threading
 T1 = 15
 T2 = 25
 F1 = 0.0001
@@ -16,16 +17,23 @@ port = 1883
 lastNtemperatures = deque(maxlen=N)
 cryticalEnter = time.time()
 alarmState = False
-arduino = serial.Serial('/dev/cu.usbmodem1301', 9600, timeout=1)
+arduino = serial.Serial('/dev/cu.usbmodem11301', 9600, timeout=1)
 time.sleep(2) 
 arduino.reset_input_buffer()
 arduino.reset_output_buffer()
 
+app = Flask(__name__)
+@app.route('/temperature', methods=['POST'])
+def manage_request():
+    data = request.get_json(silent=True)
+    print(data)
+    return jsonify(STATS), 200
 STATS = {
     "sum": 0,
     "max": -272.15,
     "min": float('inf'),
-    "count": 0
+    "count": 0,
+    "list": []
 }
 
 def send_msg(message):
@@ -53,6 +61,7 @@ def message_received(client, userData, msg):
         STATS["min"] = temperature
     STATS["sum"] += temperature
     STATS["count"] += 1
+    STATS["list"] = list(lastNtemperatures)
     
     message = read_msg()
     while message != None:
@@ -84,11 +93,21 @@ def message_received(client, userData, msg):
     print(STATS)  
     send_msg("O:" + str(opening))
     
-client = mqtt.Client()
-client.on_message = message_received
-client.connect(broker, port, 60)
-client.subscribe(temperatureTopic)
-client.loop_forever()
+def mqtt_thread():
+    client = mqtt.Client()
+    client.on_message = message_received
+    client.connect(broker, port, 60)
+    client.subscribe(temperatureTopic)
+    client.loop_forever()
+
+if __name__ == '__main__':
+    # avvia in background MQTT
+    t = threading.Thread(target=mqtt_thread, daemon=True)
+    t.start()
+    print("MQTT thread OK, ora lancio Flask…")
+    # lancia Flask in main, senza reloader, multi-threaded per poter gestire più POST
+    app.run(host='0.0.0.0', port=5001, threaded=True, use_reloader=False)
+
 
 
     
