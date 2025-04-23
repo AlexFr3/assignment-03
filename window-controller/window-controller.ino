@@ -9,8 +9,9 @@ Button *btn;
 ServoMotor *window;
 float temperature = 15.0;
 float openingPercentage = 0;
+long openingDashboard = 0;
 long openingValue = 0;
-enum states{AUTOMATIC, MANUAL};
+enum states{AUTOMATIC, MANUAL, DASHBOARD};
 states modeState = AUTOMATIC;
 int lastOpening = -1;
 states lastMode = AUTOMATIC;
@@ -30,7 +31,11 @@ void loop() {
     while(MsgService.isMsgAvailable()){
     Msg *msg = MsgService.receiveMsg();
     int startPos = (msg->getContent().indexOf(':'))+1;
-    if (msg->getContent().startsWith("T:"))
+    if (msg->getContent().startsWith("F:")) {
+      openingDashboard = msg->getContent().substring(startPos).toFloat() * 90.0;
+      modeState = DASHBOARD;
+    }
+    else if (msg->getContent().startsWith("T:"))
     {
       temperature = msg->getContent().substring(startPos).toFloat();
     }else
@@ -87,11 +92,33 @@ void loop() {
       }
       break;
     }
+    case DASHBOARD:
+    {
+      moveWindow(openingDashboard);
+
+      if (lastMode != DASHBOARD || lastOpening != openingDashboard)
+      {
+        clearOutput();
+        writeMessage("Dashboard");
+        delay(100);
+        setNextLine();
+        writeMessage("Opening angle: "+ String(openingDashboard));
+        delay(100);
+      }
+
+      openingValue = openingDashboard;
+      
+      if(btn->isPressed())
+      {
+        modeState = AUTOMATIC;
+      }
+      break;
+    }
   }
   lastTemperature = temperature;
   lastOpening = openingValue;
   lastMode= modeState;
-  //MsgService.sendMsg("Opening:"+ String(openingValue) + "\n");
+  MsgService.sendMsg(String(openingValue) + "\n");
   delay(1000);
 }
 

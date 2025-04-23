@@ -26,6 +26,15 @@ app = Flask(__name__)
 @app.route('/temperature', methods=['POST'])
 def manage_request():
     data = request.get_json(silent=True)
+    if "reset" in data:
+        if data["reset"] == True:
+            cryticalEnter= time.time()
+            alarmState = False
+            STATS["status"] = "Normal"
+    if "set_opening" in data:
+        opening = data["set_opening"]
+        send_msg("F:" + str(opening))
+        
     print(data)
     return jsonify(STATS), 200
 STATS = {
@@ -33,7 +42,9 @@ STATS = {
     "max": -272.15,
     "min": float('inf'),
     "count": 0,
-    "list": []
+    "list": [],
+    "status":"Normal",
+    "opening": 0
 }
 
 def send_msg(message):
@@ -65,30 +76,35 @@ def message_received(client, userData, msg):
     
     message = read_msg()
     while message != None:
-        print("Messaggio ricevuto: " + str(message))
+        if message:
+            STATS["opening"] = int(message)
         message = read_msg()
     send_msg("T:" + str(temperature))
     time.sleep(1)
     #Normal state
-    if temperature < T1:
+    if STATS["status"] == "Alarm":
+        frequency = F2
+        opening = 1
+    elif temperature < T1:
         cryticalEnter = time.time()
         frequency = F1
         opening = 0
-        #TODO: inviare la segnale per aperture di arduino
+        STATS["status"] = "Normal"
     #Hot state
     elif temperature <= T2:
         print("Sono a > 15")
         cryticalEnter = time.time()
         frequency = F2
         opening = 0.01 + 0.99 * ((temperature - T1) / (T2 - T1))
-        #TODO: inviare la segnale per aperture di arduino
+        STATS["status"] = "Hot"
     #Too hot state
     else:
         frequency = F2
         opening = 1
+        STATS["status"] = "Too hot"
         if time.time()- cryticalEnter >= DT :
             alarmState = True
-            #TODO bloccare fino ad intervento operatore su dashboard
+            STATS["status"] = "Alarm"
     client.publish(frequencyTopic, str(frequency))
     print(STATS)  
     send_msg("O:" + str(opening))
@@ -106,7 +122,7 @@ if __name__ == '__main__':
     t.start()
     print("MQTT thread OK, ora lancio Flask…")
     # lancia Flask in main, senza reloader, multi-threaded per poter gestire più POST
-    app.run(host='0.0.0.0', port=5001, threaded=True, use_reloader=False)
+    app.run(host='0.0.0.0', port=5006, threaded=True, use_reloader=False)
 
 
 
