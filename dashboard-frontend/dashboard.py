@@ -1,10 +1,3 @@
-"""
-PyQt5 JSON Data Viewer
-Prerequisiti:
- pip install pyqt5 requests matplotlib
-Gestione del JSON di risposta anche se è un dict singolo (p.es. {"stato": "ok"}).
-Calcolo della media se presenti i campi "sum" e "count" in ogni entry.
-"""
 import sys
 import json
 import requests
@@ -20,7 +13,7 @@ class JsonTableView(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("JSON Data Viewer")
-        self.resize(800, 600)
+        self.resize(900, 700)
         
         # Create main central widget and layout
         self.central_widget = QWidget()
@@ -108,7 +101,7 @@ class JsonTableView(QMainWindow):
         # Timer for periodic updates
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.fetch_and_update)
-        self.timer.start(5000)
+        self.timer.start(1000)
         
         # First immediate fetch
         QTimer.singleShot(0, self.fetch_and_update)
@@ -144,18 +137,18 @@ class JsonTableView(QMainWindow):
             
             # Update statistics labels
             if "max" in data and data["max"] != -272.15:
-                self.value_max.setText(f"{data['max']:.2f}")
+                self.value_max.setText(f"{data['max']:.2f}°")
             
             if "min" in data and data["min"] != float('inf'):
-                self.value_min.setText(f"{data['min']:.2f}")
+                self.value_min.setText(f"{data['min']:.2f}°")
             
             if "sum" in data and "count" in data and data["count"] > 0:
                 avg = data["sum"] / data["count"]
-                self.value_avg.setText(f"{avg:.4f}")
+                self.value_avg.setText(f"{avg:.4f}°")
             if "status" in data:
                 self.value_status.setText(data["status"])
             if "opening" in data:
-                self.value_opening.setText(f'{data["opening"]}')
+                self.value_opening.setText(f'{data["opening"]}%')
             # Update plot with temperature list
             if "list" in data and data["list"]:
                 self.plot(data["list"])

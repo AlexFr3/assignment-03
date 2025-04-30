@@ -17,7 +17,7 @@ port = 1883
 lastNtemperatures = deque(maxlen=N)
 cryticalEnter = time.time()
 alarmState = False
-arduino = serial.Serial('/dev/cu.usbmodem11301', 9600, timeout=1)
+arduino = serial.Serial('/dev/cu.usbmodem1201', 9600, timeout=1)
 time.sleep(2) 
 arduino.reset_input_buffer()
 arduino.reset_output_buffer()
@@ -77,7 +77,7 @@ def message_received(client, userData, msg):
     message = read_msg()
     while message != None:
         if message:
-            STATS["opening"] = int(message)
+            STATS["opening"] = float(message)
         message = read_msg()
     send_msg("T:" + str(temperature))
     time.sleep(1)

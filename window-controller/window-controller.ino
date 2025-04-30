@@ -16,6 +16,7 @@ states modeState = AUTOMATIC;
 int lastOpening = -1;
 states lastMode = AUTOMATIC;
 float lastTemperature = 0;
+bool switchDashboard = false;
 
 void setup() {
   outputInit();
@@ -32,8 +33,8 @@ void loop() {
     Msg *msg = MsgService.receiveMsg();
     int startPos = (msg->getContent().indexOf(':'))+1;
     if (msg->getContent().startsWith("F:")) {
+      switchDashboard = true;
       openingDashboard = msg->getContent().substring(startPos).toFloat() * 90.0;
-      modeState = DASHBOARD;
     }
     else if (msg->getContent().startsWith("T:"))
     {
@@ -52,6 +53,11 @@ void loop() {
   {
     case AUTOMATIC:
     {
+      if(switchDashboard) {
+        switchDashboard = false;
+        modeState = DASHBOARD;
+        break;
+      }
       openingValue = openingPercentage * 90.0;
       moveWindow(openingValue);
 
@@ -61,10 +67,9 @@ void loop() {
         writeMessage("Automatic");
         delay(100);
         setNextLine();
-        writeMessage("Opening angle: "+ String(openingValue));
+        writeMessage("Opening: "+ String((openingValue/90.0)*100)+"%");
         delay(100);
       }
-      
       if(btn->isPressed())
       {
         modeState = MANUAL;
@@ -74,6 +79,11 @@ void loop() {
 
     case MANUAL:
     { 
+      if(switchDashboard) {
+        switchDashboard = false;
+        modeState = DASHBOARD;
+        break;
+      }
       long valueRead = analogRead(POT_PIN);
       openingValue = (valueRead * 90) / 1023.0;
       if (lastMode != MANUAL || lastOpening != openingValue || lastTemperature != temperature)
@@ -82,7 +92,7 @@ void loop() {
         writeMessage("MANUAL  T:"+ String(temperature));
         delay(100);
         setNextLine();
-        writeMessage("Opening angle: "+ String(openingValue));
+        writeMessage("Opening: "+ String(openingValue)+"%");
         delay(100);
         moveWindow(openingValue);
       }
@@ -102,7 +112,7 @@ void loop() {
         writeMessage("Dashboard");
         delay(100);
         setNextLine();
-        writeMessage("Opening angle: "+ String(openingDashboard));
+        writeMessage("Opening: "+ String((openingDashboard/90.0)*100)+"%");
         delay(100);
       }
 
@@ -118,7 +128,7 @@ void loop() {
   lastTemperature = temperature;
   lastOpening = openingValue;
   lastMode= modeState;
-  MsgService.sendMsg(String(openingValue) + "\n");
+  MsgService.sendMsg(String((openingValue/90.0)*100) + "\n");
   delay(1000);
 }
 
