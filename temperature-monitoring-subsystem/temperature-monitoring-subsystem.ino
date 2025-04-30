@@ -22,6 +22,7 @@ enum {CONNECTED, DOWN} networkState;
 Light* redLed;
 Light* greenLed;
 TemperatureDevice* temp;
+
 void setup_wifi(){
   Serial.println(String("Connecting to ") + wifiName);
   WiFi.mode(WIFI_STA);
@@ -91,12 +92,12 @@ void setup() {
 
 void loop() {
   client.loop();
-  Serial.println("Frequenza: " +  String(frequency, 6));
+  //Serial.println("Frequenza: " +  String(frequency, 6));
   switch (networkState)
   {
     case DOWN:
     {
-      Serial.println("Down");
+      //Serial.println("Down");
       setup_wifi();
       if(WiFi.status() == WL_CONNECTED){
         reconnect();
@@ -118,7 +119,7 @@ void loop() {
       } else {
         float temperature = temp->getTemperature();
         String msg = String(temperature);
-        Serial.println(msg);
+        //Serial.println(msg);
         client.publish(temperatureTopic, msg.c_str());
         float timeStop = millis() +  (1 / frequency);
         while(millis() <= timeStop && WiFi.status() == WL_CONNECTED && client.connected()) {

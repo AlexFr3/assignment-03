@@ -49,6 +49,7 @@ void loop() {
     delete msg;
     delay(500);
   }
+
   switch (modeState)
   {
     case AUTOMATIC:
@@ -129,7 +130,7 @@ void loop() {
   lastOpening = openingValue;
   lastMode= modeState;
   MsgService.sendMsg(String((openingValue/90.0)*100) + "\n");
-  delay(1000);
+  delay(500);
 }
 
 void moveWindow(int angle)

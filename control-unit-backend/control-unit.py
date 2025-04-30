@@ -5,7 +5,7 @@ import serial
 from flask import Flask, request, jsonify
 import threading
 T1 = 15
-T2 = 25
+T2 = 20
 F1 = 0.0001
 F2 = 0.0002
 DT = 10
